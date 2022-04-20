@@ -1,0 +1,17 @@
+C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\backup.exe
+C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\backup.deps.json
+C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\backup.runtimeconfig.json
+C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\backup.dll
+C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\ref\backup.dll
+C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\backup.pdb
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.csproj.AssemblyReference.cache
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.AssemblyInfoInputs.cache
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.AssemblyInfo.cs
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.csproj.CoreCompileInputs.cache
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.dll
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\ref\backup.dll
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.pdb
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.genruntimeconfig.cache
+C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\Newtonsoft.Json.dll
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\backup.csproj.CopyComplete

@@ -1,0 +1,7 @@
+{
+  "root": {
+    "source": "../../../../tmp/source",
+    "destination": "../../../../tmp/destination"
+  },
+  "frequency": "* * * * *"
+}
