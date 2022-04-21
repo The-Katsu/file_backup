@@ -4,6 +4,19 @@ var data = GetJsonData("../../../config.json");
 
 ShowSourceFiles(data.root.source);
 
+FileBackup(data.root.source, data.root.destination);
+
+static void FileBackup(string source, string destination)
+{
+    foreach (string dirPath in Directory.GetDirectories(source, "*",
+        SearchOption.AllDirectories))
+        Directory.CreateDirectory(dirPath.Replace(source, destination));
+
+    foreach (string newPath in Directory.GetFiles(source, "*.*",
+        SearchOption.AllDirectories))
+        File.Copy(newPath, newPath.Replace(source, destination), true);
+}
+
 static void ShowSourceFiles(string source)
 {
     var files = Directory.GetFileSystemEntries(source, "*", SearchOption.AllDirectories);
