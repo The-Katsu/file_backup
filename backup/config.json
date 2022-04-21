@@ -1,7 +1,7 @@
 {
   "root": {
-    "source": "../../../../tmp/source",
-    "destination": "../../../../tmp/destination"
+    "source": "C:\\Users\\Vladimir\\source\\repos\\backup\\tmp\\source",
+    "destination": "C:\\Users\\Vladimir\\source\\repos\\backup\\tmp\\destination"
   },
   "frequency": "* * * * *"
 }
