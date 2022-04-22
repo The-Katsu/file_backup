@@ -1,69 +1,111 @@
-﻿
+﻿using Microsoft.Extensions.Logging;
 
-static void FileBackup(string source, string destination)
+var loggerFactory = LoggerFactory.Create(
+    builder => builder
+        .AddConsole()
+        .AddDebug()
+        .SetMinimumLevel(LogLevel.Trace)
+    );
+
+var logger = loggerFactory.CreateLogger<Program>();
+
+FileBackup(logger);
+
+static void FileBackup(ILogger<Program> logger)
 {
-    var data = GetJsonData();
-
-    Console.WriteLine("Поиск новых файлов или модификаций...");
-
-    var sourceFiles = Directory.GetFiles((string)data.root.source, "*.*", SearchOption.AllDirectories);
-
-    var destinationFiles = Directory.GetFiles((string)data.root.destination, "*.*", SearchOption.AllDirectories);
-
-    List<string> newFiles = sourceFiles.ToList();
-
-    foreach (var file1 in sourceFiles)
+    try
     {
-        foreach (var file2 in destinationFiles)
+        logger.LogTrace("Считываем данные с файла конфигурации...");
+        var data = GetJsonData();
+
+        logger.LogInformation("Данные файла конфигурации:" +
+            $"\nsource: {data.source}" +
+            $"\ndestination: {data.destination}" +
+            $"\ncron: {data.frequency}");
+
+        logger.LogInformation("Список директорий в источнике:" + GetFoldersList(data.source));
+        logger.LogInformation("Список файлов в источнике:" + GetFilesList(data.source));
+
+        logger.LogTrace("Поиск новых файлов или модификаций...");
+
+        var sourceFiles = Directory.GetFiles((string)data.source, "*.*", SearchOption.AllDirectories);
+        var destinationFiles = Directory.GetFiles((string)data.destination, "*.*", SearchOption.AllDirectories);
+        List<string> newFiles = sourceFiles.ToList();
+
+        foreach (var file1 in sourceFiles)
+            foreach (var file2 in destinationFiles)
+                if (FileCompare(file1, file2))
+                {
+                    newFiles.Remove(file1);
+                    break;
+                }
+
+        if (newFiles.Count == 0)
         {
-            if (FileCompare(file1, file2))
-            {
-                newFiles.Remove(file1);
-                break;
-            }
+            logger.LogInformation("Нет новых файлов или модификаций!");
+            return;
         }
+
+        logger.LogInformation("Новые файлы или модификации:" + ListToString(newFiles));
+
+        logger.LogTrace("Получаем директории файлов...");
+
+        List<string> newFolders = new();
+
+        foreach (var filename in newFiles)
+            newFolders.Add(Path.GetDirectoryName(filename));
+
+        newFolders = newFolders.Distinct().ToList();
+
+        logger.LogInformation("Директории файлов" + ListToString(newFolders));
+
+        string destinationFolder = "\\base";
+
+        if (Directory.Exists((string)data.destination + destinationFolder))
+            destinationFolder = string.Format("\\inc_{0:yyyy_MM_dd_HH_mm_ss}", DateTime.Now);
+
+        string destinationPath = (string)data.destination + destinationFolder;
+
+        logger.LogTrace("Создаём новые резервные директории...");
+
+        foreach (var folder in newFolders)
+            Directory.CreateDirectory(folder.Replace((string)data.source, destinationPath));
+
+        logger.LogInformation("Новые резервные директории:" + GetFoldersList(destinationPath));
+
+        logger.LogTrace("Создаём резервные копии...");
+
+        foreach (var file in newFiles)
+            File.Copy(file, file.Replace((string)data.source, destinationPath));
+
+        logger.LogInformation("Созданы резервные копии:" + GetFilesList(destinationPath));
+
+        logger.LogInformation("Резервное копирование завершено!");
     }
-
-    Console.WriteLine("Найдены файлы:");
-    newFiles.ForEach(file => Console.WriteLine(file));
-
-    Console.WriteLine("Получаем директории файлов...");
-
-    List<string> newFolders = new();
-    foreach (var filename in newFiles)
-        newFolders.Add(Path.GetDirectoryName(filename));
-    newFolders = newFolders.Distinct().ToList();
-
-    Console.WriteLine("Новые директории:");
-    newFolders.ForEach(folder => Console.WriteLine(folder));
-
-    Console.WriteLine("Создаём новые резервные директории...");
-
-    string destinationFolder = "\\base";
-
-    if (Directory.Exists((string)data.root.destination + destinationFolder))
-        destinationFolder = string.Format("\\inc_{0:yyyy_MM_dd_HH_mm_ss}", DateTime.Now);
-
-    string destinationPath = (string)data.root.destination + destinationFolder;
-
-    foreach (var folder in newFolders)
-        Directory.CreateDirectory(folder.Replace((string)data.root.source, destinationPath));
-
-    Console.WriteLine("Новые резервные директории:");
-    foreach (var folder in Directory.GetDirectories(destinationPath, "*", SearchOption.AllDirectories))
-        Console.WriteLine(folder);
-
-    Console.WriteLine("Создаём резервные копии...");
-    foreach (var file in newFiles)
-        File.Copy(file, file.Replace((string)data.root.source, destinationPath));
-
-    Console.WriteLine("Созданы резервные копии:");
-    foreach (var file in Directory.GetFiles(destinationPath, "*.*", SearchOption.AllDirectories))
-        Console.WriteLine(file);
-
-    Console.WriteLine("Копирование завершено!");
+    catch (Exception ex) 
+    { 
+        logger.LogError(ex.Message); 
+    }
 }
 
+//Чтение данных из config.json
+static dynamic GetJsonData()
+{
+    using var sr = new StreamReader("../../../config.json");
+    var json = sr.ReadToEnd();
+    dynamic data = Newtonsoft.Json.Linq.JObject.Parse(json);
+    if (!Directory.Exists((string)data.source))
+        throw new DirectoryNotFoundException($"Введённой директории-источника не существует - {data.source}");
+    if (!Directory.Exists((string)data.destination))
+        throw new DirectoryNotFoundException($"Введённой резервной директории не сущетсвует - {data.destination}");
+    if (!Quartz.CronExpression.IsValidExpression((string)data.frequency))
+        throw new System.Data.InvalidExpressionException($"Неправильно введено cron-выражени - {data.frequency}" +
+            "\n Генератор cron-выражений https://clck.ru/gMpAH");
+    return data;
+}
+
+//---
+//ХЭШ
 static bool FileCompare(string filepath1, string filepath2)
 {
     var barr1 = CalculateMD5(filepath1);
@@ -77,10 +119,13 @@ static byte[] CalculateMD5(string filepath)
     using var stream = File.OpenRead(filepath);
     return md5.ComputeHash(stream); 
 }
+//--
 
+//-------------------
+//Визуализация данных
 static string GetFilesList(string path)
 {
-    string files = "Список файлов:";
+    string files = "";
     Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
         .ToList().ForEach(file => files += $"\n{file}");
     return files;
@@ -88,23 +133,16 @@ static string GetFilesList(string path)
 
 static string GetFoldersList(string path)
 {
-    string folders = "Список папок:";
+    string folders = "";
     Directory.GetDirectories(path, "*", SearchOption.AllDirectories)
         .ToList().ForEach(folder => folders += $"\n{folder}");
     return folders;
 }
 
-static dynamic GetJsonData()
+static string ListToString(List<string> lst)
 {
-    using var sr = new StreamReader("../../../config.json");
-    var json = sr.ReadToEnd();
-    dynamic data = Newtonsoft.Json.Linq.JObject.Parse(json);
-    if (!Directory.Exists((string)data.source))
-        throw new DirectoryNotFoundException($"Введённой директории-источника не существует - {data.source}");
-    if (!Directory.Exists((string)data.destination))
-        throw new DirectoryNotFoundException($"Введённой резервной директории не сущетсвует - {data.destination}");
-    if (!Quartz.CronExpression.IsValidExpression((string)data.frequency))
-        throw new System.Data.InvalidExpressionException($"Неправильно введено cron-выражени - {data.frequency}" +
-            $"\n Смотрите https://clck.ru/gMpAH с примерамии cron");
-    return data;
+    string str = "";
+    lst.ForEach(item => str += $"\n{item}");
+    return str;
 }
+//-------------------
