@@ -89,7 +89,7 @@ public class FileBackupJob : IJob
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message);
+            _logger.LogError(ex.GetType() + ": " + ex.Message);
         }
         return Task.CompletedTask;
     }
