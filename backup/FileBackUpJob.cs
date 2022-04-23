@@ -86,12 +86,14 @@ public class FileBackupJob : IJob
             _logger.LogInformation("Созданы резервные копии:" + GetFilesList(destinationPath));
 
             _logger.LogInformation("Резервное копирование завершено!");
+
+            return Task.CompletedTask;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.GetType() + ": " + ex.Message);
+            return Task.FromException(ex);
         }
-        return Task.CompletedTask;
     }
 
     private dynamic GetJsonData()
