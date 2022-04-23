@@ -96,21 +96,6 @@ public class FileBackupJob : IJob
         }
     }
 
-    private dynamic GetJsonData()
-    {
-        using var sr = new StreamReader("C:\\Users\\Vladimir\\source\\repos\\backup\\backup\\config.json");
-        var json = sr.ReadToEnd();
-        dynamic data = Newtonsoft.Json.Linq.JObject.Parse(json);
-        if (!Directory.Exists((string)data.source))
-            throw new DirectoryNotFoundException($"Введённой директории-источника не существует - {data.source}");
-        if (!Directory.Exists((string)data.destination))
-            throw new DirectoryNotFoundException($"Введённой резервной директории не сущетсвует - {data.destination}");
-        if (!CronExpression.IsValidExpression((string)data.frequency))
-            throw new System.Data.InvalidExpressionException($"Неправильно введено cron-выражени - {data.frequency}" +
-                "\n Генератор cron-выражений https://clck.ru/gMpAH");
-        return data;
-    }
-
     //---
     //ХЭШ
     private bool FileCompare(string filepath1, string filepath2)
