@@ -5,7 +5,6 @@ using Quartz;
 try
 {
     var data = GetJsonData("config.json");
-
     CreateHostBuilder(args, data).Build().Run();
 }
 catch (Exception ex)
@@ -20,7 +19,7 @@ static IHostBuilder CreateHostBuilder(string[] args, dynamic data) =>
         {
             logging.AddConsole();
             logging.AddDebug();
-            logging.SetMinimumLevel(LogLevel.Information);
+            logging.SetMinimumLevel(LogLevel.Trace);
         })
         .ConfigureServices((hostContext, services) =>
         {

@@ -11,7 +11,7 @@ public class FileBackupJob : IJob
     {
         try
         {
-            _logger.LogTrace("Читаем данные с файла конфигурации...");
+            _logger.LogTrace("Получаем данные файла конфигурации...");
 
             JobDataMap dataMap = context.JobDetail.JobDataMap;
             string source = dataMap.GetString("source");
