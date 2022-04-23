@@ -1,5 +1,5 @@
 {
   "source": "C:\\Users\\Vladimir\\source\\repos\\backup\\tmp\\source",
   "destination": "C:\\Users\\Vladimir\\source\\repos\\backup\\tmp\\destination",
-  "frequency": "0 * 0 ? * * *"
+  "frequency": "0 * * ? * *"
 }

@@ -2,15 +2,25 @@
 using Microsoft.Extensions.Logging;
 using Quartz;
 
-CreateHostBuilder(args).Build().Run();
+try
+{
+    var data = GetJsonData("config.json");
 
-static IHostBuilder CreateHostBuilder(string[] args) =>
+    CreateHostBuilder(args, data).Build().Run();
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}
+
+
+static IHostBuilder CreateHostBuilder(string[] args, dynamic data) =>
     Host.CreateDefaultBuilder(args)
         .ConfigureLogging(logging =>
         {
             logging.AddConsole();
             logging.AddDebug();
-            logging.SetMinimumLevel(LogLevel.Trace);
+            logging.SetMinimumLevel(LogLevel.Information);
         })
         .ConfigureServices((hostContext, services) =>
         {
@@ -20,13 +30,31 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
 
                 var jobKey = new JobKey("FileBackupJob");
 
-                q.AddJob<FileBackUpJob>(o => o.WithIdentity(jobKey));
+                q.AddJob<FileBackupJob>(o => o
+                    .WithIdentity(jobKey)
+                    .UsingJobData("source", (string)data.source)
+                    .UsingJobData("destination", (string)data.destination));
 
                 q.AddTrigger(o => o
                     .ForJob(jobKey)
                     .WithIdentity("FileBackupJob-trigger")
-                    .WithCronSchedule("* * * * * ? *"));
+                    .WithCronSchedule((string)data.frequency));
             });
 
             services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
         });
+
+static dynamic GetJsonData(string path)
+{
+    using var sr = new StreamReader(path);
+    var json = sr.ReadToEnd();
+    dynamic data = Newtonsoft.Json.Linq.JObject.Parse(json);
+    if (!Directory.Exists((string)data.source))
+        throw new DirectoryNotFoundException($"Введённой директории-источника не существует - {data.source}");
+    if (!Directory.Exists((string)data.destination))
+        throw new DirectoryNotFoundException($"Введённой резервной директории не сущетсвует - {data.destination}");
+    if (!CronExpression.IsValidExpression((string)data.frequency))
+        throw new System.Data.InvalidExpressionException($"Неправильно введено cron-выражени - {data.frequency}" +
+            "\n Генератор cron-выражений https://clck.ru/gMpAH");
+    return data;
+}

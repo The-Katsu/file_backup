@@ -56,4 +56,4 @@ C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\Quartz.Extensions.
 C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\System.Diagnostics.EventLog.dll
 C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Diagnostics.EventLog.Messages.dll
 C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Diagnostics.EventLog.dll
-C:\Users\Vladimir\source\repos\backup\backup\bin\Debug\net6.0\ref\backup.dll
+C:\Users\Vladimir\source\repos\backup\backup\obj\Debug\net6.0\refint\backup.dll

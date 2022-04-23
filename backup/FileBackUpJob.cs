@@ -2,10 +2,10 @@
 using Quartz;
 
 [DisallowConcurrentExecution]
-public class FileBackUpJob : IJob
+public class FileBackupJob : IJob
 {
-    private readonly ILogger<FileBackUpJob> _logger;
-    public FileBackUpJob(ILogger<FileBackUpJob> logger) => _logger = logger;
+    private readonly ILogger<FileBackupJob> _logger;
+    public FileBackupJob(ILogger<FileBackupJob> logger) => _logger = logger;
 
     public Task Execute(IJobExecutionContext context)
     {
@@ -13,14 +13,15 @@ public class FileBackUpJob : IJob
         {
             _logger.LogTrace("Читаем данные с файла конфигурации...");
 
-            var data = GetJsonData();
+            JobDataMap dataMap = context.JobDetail.JobDataMap;
+            string source = dataMap.GetString("source");
+            string destination = dataMap.GetString("destination");
 
             _logger.LogInformation("Данные файла конфигурации:" +
-                $"\nsource: {data.source}" +
-                $"\ndestination: {data.destination}" +
-                $"\ncron: {data.frequency}");
+                $"\nsource: {source}" +
+                $"\ndestination: {destination}");
 
-            var sourceFiles = Directory.GetFiles((string)data.source, "*.*", SearchOption.AllDirectories);
+            var sourceFiles = Directory.GetFiles(source, "*.*", SearchOption.AllDirectories);
 
             if (sourceFiles.Length == 0)
             {
@@ -28,11 +29,11 @@ public class FileBackUpJob : IJob
                 return Task.CompletedTask;
             }
 
-            var destinationFiles = Directory.GetFiles((string)data.destination, "*.*", SearchOption.AllDirectories);
+            var destinationFiles = Directory.GetFiles(destination, "*.*", SearchOption.AllDirectories);
             List<string> newFiles = sourceFiles.ToList();
 
-            _logger.LogInformation("Список директорий в источнике:" + GetFoldersList((string)data.source));
-            _logger.LogInformation("Список файлов в источнике:" + GetFilesList((string)data.source));
+            _logger.LogInformation("Список директорий в источнике:" + GetFoldersList(source));
+            _logger.LogInformation("Список файлов в источнике:" + GetFilesList(source));
 
             _logger.LogTrace("Поиск новых файлов или модификаций...");
 
@@ -65,22 +66,22 @@ public class FileBackUpJob : IJob
 
             string destinationFolder = "\\base";
 
-            if (Directory.Exists((string)data.destination + destinationFolder))
+            if (Directory.Exists(destination + destinationFolder))
                 destinationFolder = string.Format("\\inc_{0:yyyy_MM_dd_HH_mm_ss}", DateTime.Now);
 
-            string destinationPath = (string)data.destination + destinationFolder;
+            string destinationPath = destination + destinationFolder;
 
             _logger.LogTrace("Создаём новые резервные директории...");
 
             foreach (var folder in newFolders)
-                Directory.CreateDirectory(folder.Replace((string)data.source, destinationPath));
+                Directory.CreateDirectory(folder.Replace(source, destinationPath));
 
             _logger.LogInformation("Новые резервные директории:" + GetFoldersList(destinationPath));
 
             _logger.LogTrace("Создаём резервные копии...");
 
             foreach (var file in newFiles)
-                File.Copy(file, file.Replace((string)data.source, destinationPath));
+                File.Copy(file, file.Replace(source, destinationPath));
 
             _logger.LogInformation("Созданы резервные копии:" + GetFilesList(destinationPath));
 
